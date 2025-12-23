@@ -1,6 +1,5 @@
 
 CREATE DATABASE IF NOT EXISTS gold;
-
 CREATE OR REPLACE TABLE gold.dim_customer AS
 SELECT
   customer_id,

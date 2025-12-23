@@ -9,7 +9,7 @@ from utils.layer_controller import LayerController
 spark.sql("CREATE DATABASE IF NOT EXISTS landing")
 spark.sql("CREATE DATABASE IF NOT EXISTS bronze")
 
-SOURCE_TABLE = "landing.olist_customers_csv" 
+SOURCE_TABLE = "default.olist_customers_dataset"
 TARGET_TABLE = "bronze.customers"
 
 ctrl = LayerController(spark, layer="bronze", object_name=TARGET_TABLE, source=SOURCE_TABLE)

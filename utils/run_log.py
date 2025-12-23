@@ -1,7 +1,7 @@
 
-from pyspark.sql import functions as F
+from pyspark.sql import SparkSession
 
-def ensure_meta_tables():
+def ensure_meta_tables(spark: SparkSession):
     spark.sql("CREATE DATABASE IF NOT EXISTS meta")
     spark.sql("""
     CREATE TABLE IF NOT EXISTS meta.run_log (
@@ -9,14 +9,30 @@ def ensure_meta_tables():
       layer STRING,
       object_name STRING,
       status STRING,
-      rows BIGINT,
+      row_count BIGINT,
       details STRING
     ) USING DELTA
     """)
 
-def log_run(layer: str, object_name: str, status: str, rows: int = None, details: str = None):
-    ensure_meta_tables()
-    df = spark.createDataFrame([(
-        None, layer, object_name, status, rows, details
-    )], "run_ts timestamp, layer string, object_name string, status string, rows long, details string")         .withColumn("run_ts", F.current_timestamp())
-    df.write.mode("append").saveAsTable("meta.run_log")
+def log_run(
+    spark: SparkSession,
+    layer: str,
+    object_name: str,
+    status: str,
+    row_count: int = 0,
+    details: str = ""
+):
+    ensure_meta_tables(spark)
+
+    safe_details = (details or "").replace("'", "''")
+
+    spark.sql(f"""
+      INSERT INTO meta.run_log
+      SELECT
+        current_timestamp() as run_ts,
+        '{layer}' as layer,
+        '{object_name}' as object_name,
+        '{status}' as status,
+        {int(row_count)} as row_count,
+        '{safe_details}' as details
+    """)
